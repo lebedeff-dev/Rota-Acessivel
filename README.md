@@ -78,4 +78,5 @@ navegadores restringem a leitura em voz alta em `file://`; prefira A ou B.
   enquanto o cronômetro exibe a contagem regressiva “real”.
 - **Sem framework e sem build:** basta um servidor estático.
 
-https://www.google.com/search?q=(https://app.notion.com/p/RotaAcess-vel-Acessibilidade-no-Transporte-P-blico-36ce58ef56ad802d9ed5c7c0cd4fdad1)
+## Escopo do Projeto no Notion
+https://dapper-tuba-16d.notion.site/RotaAcess-vel-Acessibilidade-no-Transporte-P-blico-36ce58ef56ad802d9ed5c7c0cd4fdad1
