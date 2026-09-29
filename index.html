@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+        content="RotaAcessível — mobilidade acessível no transporte público. Planeje, acompanhe sua viagem e receba alertas adaptados ao apoio escolhido." />
+  <meta name="theme-color" content="#0a2a5e" />
+  <title>RotaAcessível — Mobilidade acessível no transporte público</title>
+
+  <!-- Leaflet (mapa interativo) — mesma biblioteca planejada nas APIs originais -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Link de salto para leitores de tela / teclado (WCAG 2.4.1) -->
+  <a class="skip-link" href="#conteudo">Saltar para o conteúdo</a>
+
+  <!-- Região de anúncios para leitores de tela (aria-live) -->
+  <div id="anunciador" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ============================ CABEÇALHO ============================ -->
+  <header class="topbar" role="banner">
+    <div class="topbar__inner">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor"
+               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z" />
+            <circle cx="12" cy="11" r="2.2" />
+          </svg>
+        </span>
+        <div class="brand__text">
+          <strong>RotaAcessível</strong>
+          <small>Mobilidade acessível no transporte público</small>
+        </div>
+      </div>
+
+      <nav class="topbar__actions" aria-label="Ações principais">
+        <button type="button" class="btn btn--ghost" id="btnPerfil" aria-haspopup="dialog">
+          <span aria-hidden="true">👤</span> Perfil
+        </button>
+        <button type="button" class="btn btn--ghost" id="btnPararAudioGlobal" hidden>
+          <span aria-hidden="true">⏹</span> Parar áudio
+        </button>
+      </nav>
+    </div>
+
+    <!-- Indicador de etapas (stepper) -->
+    <ol class="stepper" id="stepper" aria-label="Etapas do fluxo">
+      <li data-step="inicio"    class="stepper__item is-active"><span>1</span>Início</li>
+      <li data-step="apoio"     class="stepper__item"><span>2</span>Apoio</li>
+      <li data-step="rota"      class="stepper__item"><span>3</span>Rota</li>
+      <li data-step="viagem"    class="stepper__item"><span>4</span>Viagem</li>
+      <li data-step="fim"       class="stepper__item"><span>5</span>Chegada</li>
+      <li data-step="feedback"  class="stepper__item"><span>6</span>Feedback</li>
+    </ol>
+  </header>
+
+  <!-- ============================ CONTEÚDO ============================ -->
+  <main id="conteudo" class="wrap" role="main">
+
+    <!-- ---------- ETAPA 1: BOAS-VINDAS ---------- -->
+    <section id="etapa-inicio" class="etapa is-visible" aria-labelledby="t-inicio" tabindex="-1">
+      <div class="hero card">
+        <div class="hero__body">
+          <p class="eyebrow">Protótipo acadêmico · dados simulados</p>
+          <h1 id="t-inicio">Chegue ao seu destino com mais autonomia e segurança</h1>
+          <p class="lead">
+            Planeje a rota, acompanhe a viagem em tempo real e receba um alerta de
+            aproximação adaptado ao <strong>tipo de apoio</strong> que você escolher.
+            Sem cadastro, sem laudo, sem exposição de dados pessoais.
+          </p>
+          <div class="hero__cta">
+            <button type="button" class="btn btn--primary btn--lg" data-goto="apoio">
+              Começar
+            </button>
+            <button type="button" class="btn btn--soft btn--lg" id="btnOuvirApresentacao">
+              <span aria-hidden="true">🔊</span> Ouvir apresentação
+            </button>
+          </div>
+          <p class="lgpd">
+            <span aria-hidden="true">🔒</span>
+            A rota UCB → Estação Taguatinga Sul é simulada para demonstração. O sistema
+            não coleta nome, CPF, documento, laudo ou localização real (LGPD).
+          </p>
+        </div>
+        <ul class="hero__features" aria-label="Recursos">
+          <li><span aria-hidden="true">🗺️</span> Rota no mapa interativo</li>
+          <li><span aria-hidden="true">📊</span> Progresso em tempo real</li>
+          <li><span aria-hidden="true">⚠️</span> Alerta de aproximação</li>
+          <li><span aria-hidden="true">♿</span> Apoio visual, sonoro e padrão</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ---------- ETAPA 2: TIPO DE APOIO ---------- -->
+    <section id="etapa-apoio" class="etapa" aria-labelledby="t-apoio" tabindex="-1" hidden>
+      <div class="etapa__head">
+        <h2 id="t-apoio">Escolha o tipo de apoio</h2>
+        <p>Você não precisa declarar deficiência. Escolha apenas como deseja receber
+           orientações durante a viagem. Isso muda a forma dos alertas.</p>
+        <button type="button" class="btn btn--soft" id="btnOuvirApoios">
+          <span aria-hidden="true">🔊</span> Ouvir as opções
+        </button>
+      </div>
+
+      <div class="apoios" role="radiogroup" aria-label="Tipo de apoio">
+        <button type="button" class="apoio-card" role="radio" aria-checked="false" data-apoio="VISUAL">
+          <span class="apoio-card__icon" aria-hidden="true">👁️</span>
+          <span class="apoio-card__title">Apoio visual</span>
+          <span class="apoio-card__desc">Alertas maiores, destacados e de fácil percepção na tela.</span>
+        </button>
+        <button type="button" class="apoio-card" role="radio" aria-checked="false" data-apoio="SONORO">
+          <span class="apoio-card__icon" aria-hidden="true">🔊</span>
+          <span class="apoio-card__title">Apoio sonoro</span>
+          <span class="apoio-card__desc">Leitura em voz alta e instruções sonoras durante o trajeto.</span>
+        </button>
+        <button type="button" class="apoio-card" role="radio" aria-checked="false" data-apoio="PADRAO">
+          <span class="apoio-card__icon" aria-hidden="true">🧭</span>
+          <span class="apoio-card__title">Apoio padrão</span>
+          <span class="apoio-card__desc">Mapa e alertas básicos, com áudio opcional que você ativa.</span>
+        </button>
+      </div>
+
+      <!-- RF-08: áudio opcional aparece apenas no Apoio padrão -->
+      <div id="padraoAudioPanel" class="audio-opt" hidden>
+        <label class="switch">
+          <input type="checkbox" id="chkAudioOpcional" />
+          <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
+          <span class="switch__label">Ativar áudio opcional (leitura em voz alta)</span>
+        </label>
+      </div>
+
+      <div class="etapa__nav">
+        <button type="button" class="btn btn--ghost" data-goto="inicio">← Voltar</button>
+        <button type="button" class="btn btn--primary" id="btnApoioContinuar" data-goto="rota" disabled>
+          Continuar →
+        </button>
+      </div>
+    </section>
+
+    <!-- ---------- ETAPA 3: ROTA + MAPA ---------- -->
+    <section id="etapa-rota" class="etapa" aria-labelledby="t-rota" tabindex="-1" hidden>
+      <div class="etapa__head">
+        <h2 id="t-rota">Sua rota simulada</h2>
+        <p>Confira o trajeto no mapa antes de iniciar a viagem.</p>
+      </div>
+
+      <div class="rota-grid">
+        <div class="card rota-info">
+          <dl class="datalist">
+            <div><dt>Origem</dt><dd>Universidade Católica de Brasília</dd></div>
+            <div><dt>Destino</dt><dd>Estação Taguatinga Sul</dd></div>
+            <div><dt>Distância</dt><dd>3,50 km</dd></div>
+            <div><dt>Duração estimada</dt><dd>11 min</dd></div>
+            <div><dt>Apoio escolhido</dt><dd id="rotaApoioLabel">—</dd></div>
+          </dl>
+          <div class="map-controls" role="group" aria-label="Controles do mapa">
+            <button type="button" class="btn btn--soft btn--sm" id="btnCentralizar">Centralizar</button>
+            <button type="button" class="btn btn--soft btn--sm" id="btnRecarregar">Recarregar mapa</button>
+          </div>
+          <div class="etapa__nav">
+            <button type="button" class="btn btn--ghost" data-goto="apoio">← Voltar</button>
+            <button type="button" class="btn btn--primary" id="btnIniciarViagem">Iniciar viagem →</button>
+          </div>
+        </div>
+
+        <div class="card map-card">
+          <div id="mapa" role="img"
+               aria-label="Mapa da rota entre a Universidade Católica de Brasília e a Estação Taguatinga Sul"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- ETAPA 4: ACOMPANHAMENTO ---------- -->
+    <section id="etapa-viagem" class="etapa" aria-labelledby="t-viagem" tabindex="-1" hidden>
+      <div class="etapa__head">
+        <h2 id="t-viagem">Acompanhamento da viagem</h2>
+        <p>Você está a caminho da Estação Taguatinga Sul.</p>
+      </div>
+
+      <!-- Alerta de aproximação (adaptado ao apoio) -->
+      <div id="alerta" class="alerta" role="alert" aria-live="assertive" hidden>
+        <span class="alerta__icon" aria-hidden="true">⚠️</span>
+        <div>
+          <strong id="alertaTitulo">Aproximando do destino</strong>
+          <p id="alertaTexto">Prepare-se para desembarcar na Estação Taguatinga Sul.</p>
+        </div>
+      </div>
+
+      <div class="viagem-grid">
+        <div class="card map-card">
+          <div id="mapaViagem" role="img"
+               aria-label="Mapa acompanhando o deslocamento até a Estação Taguatinga Sul"></div>
+        </div>
+
+        <div class="card painel">
+          <div class="painel__status">
+            <span class="chip" id="statusChip">Em trânsito</span>
+            <span class="painel__pct" id="pct" aria-hidden="true">0%</span>
+          </div>
+
+          <div class="progress" role="progressbar" aria-label="Progresso da viagem"
+               aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressbar">
+            <div class="progress__fill" id="progressFill"></div>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <span class="stat__label">Percorrido</span>
+              <span class="stat__value" id="kmPercorrido">0,00 km</span>
+            </div>
+            <div class="stat">
+              <span class="stat__label">Total</span>
+              <span class="stat__value">3,50 km</span>
+            </div>
+            <div class="stat">
+              <span class="stat__label">Tempo restante</span>
+              <span class="stat__value" id="tempoRestante">11:00</span>
+            </div>
+            <div class="stat">
+              <span class="stat__label">Ponto atual</span>
+              <span class="stat__value stat__value--sm" id="pontoAtual">UCB</span>
+            </div>
+          </div>
+
+          <div class="painel__controls">
+            <button type="button" class="btn btn--soft btn--sm" id="btnPausar">Pausar</button>
+            <button type="button" class="btn btn--soft btn--sm" id="btnReiniciarViagem">Reiniciar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- ETAPA 5: FINALIZAÇÃO ---------- -->
+    <section id="etapa-fim" class="etapa" aria-labelledby="t-fim" tabindex="-1" hidden>
+      <div class="card sucesso">
+        <span class="sucesso__icon" aria-hidden="true">✅</span>
+        <h2 id="t-fim">Você chegou ao destino!</h2>
+        <p>Viagem simulada concluída na <strong>Estação Taguatinga Sul</strong>.
+           Que tal contar como foi a experiência?</p>
+        <div class="etapa__nav etapa__nav--center">
+          <button type="button" class="btn btn--ghost" data-goto="inicio">Voltar ao início</button>
+          <button type="button" class="btn btn--primary" data-goto="feedback">Registrar feedback →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- ETAPA 6: FEEDBACK ---------- -->
+    <section id="etapa-feedback" class="etapa" aria-labelledby="t-feedback" tabindex="-1" hidden>
+      <div class="card">
+        <div class="etapa__head">
+          <h2 id="t-feedback">O trajeto foi acessível para você?</h2>
+          <p>Seu feedback é opcional e ajuda a melhorar o RotaAcessível.</p>
+        </div>
+
+        <form id="formFeedback" novalidate>
+          <fieldset class="avaliacao">
+            <legend class="sr-only">Avaliação de acessibilidade</legend>
+            <label class="radio-pill">
+              <input type="radio" name="avaliacao" value="SIM" />
+              <span><span aria-hidden="true">😃</span> Sim</span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="avaliacao" value="PARCIALMENTE" />
+              <span><span aria-hidden="true">😐</span> Parcialmente</span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="avaliacao" value="NAO" />
+              <span><span aria-hidden="true">🙁</span> Não</span>
+            </label>
+          </fieldset>
+
+          <label class="campo">
+            <span class="campo__label">Comentário (opcional)</span>
+            <textarea id="comentario" name="comentario" rows="3"
+                      maxlength="500" placeholder="Conte como foi sua experiência..."></textarea>
+          </label>
+
+          <p class="form-erro" id="feedbackErro" role="alert" hidden></p>
+
+          <div class="etapa__nav">
+            <button type="button" class="btn btn--ghost" data-goto="inicio">Pular</button>
+            <button type="submit" class="btn btn--primary">Enviar feedback</button>
+          </div>
+        </form>
+
+        <div id="feedbackOk" class="sucesso sucesso--inline" hidden>
+          <span class="sucesso__icon" aria-hidden="true">🎉</span>
+          <p id="feedbackOkTexto">Feedback registrado. Obrigado!</p>
+          <button type="button" class="btn btn--primary" data-goto="inicio">Voltar ao início</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================ MODAL PERFIL ============================ -->
+  <div class="modal" id="modalPerfil" role="dialog" aria-modal="true"
+       aria-labelledby="perfilTitulo" hidden>
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__box card" role="document">
+      <div class="modal__head">
+        <h2 id="perfilTitulo">Perfil — recursos futuros</h2>
+        <button type="button" class="btn btn--icon" data-close-modal aria-label="Fechar">✕</button>
+      </div>
+      <p class="muted">Os itens abaixo são demonstrativos e não funcionam neste MVP.</p>
+      <ul class="futuros">
+        <li><span aria-hidden="true">🕘</span> Histórico de rotas <em>Futuro</em></li>
+        <li><span aria-hidden="true">⭐</span> Rotas favoritas <em>Futuro</em></li>
+        <li><span aria-hidden="true">🛠️</span> Painel administrativo <em>Futuro</em></li>
+        <li><span aria-hidden="true">🚌</span> Consulta real de linhas <em>Futuro</em></li>
+        <li><span aria-hidden="true">📡</span> Frota em tempo real <em>Futuro</em></li>
+        <li><span aria-hidden="true">🎙️</span> Comando por voz <em>Futuro</em></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="rodape" role="contentinfo">
+    <p>RotaAcessível · Protótipo acadêmico com dados simulados · Não coleta dados pessoais reais (LGPD).</p>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
